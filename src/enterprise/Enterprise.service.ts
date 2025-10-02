@@ -1,50 +1,64 @@
-import { ConflictException, NotFoundException } from "@nestjs/common";
-import { EnterpriseDTO } from "./dtos/Enterprise.dto";
-import { EnterpriseResponseDTO } from "./dtos/Enterprise.response.dto";
-import { EnterpriseUpdateDTO } from "./dtos/Enterprise.update.dto";
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { EnterpriseDTO } from './dtos/Enterprise.dto';
+import { EnterpriseResponseDTO } from './dtos/Enterprise.response.dto';
+import { EnterpriseUpdateDTO } from './dtos/Enterprise.update.dto';
+import { EnterpriseRepository } from './Enterprise.repository';
+import { NotContains } from 'class-validator';
 
 class EnterpriseService {
-    static async create(dto: EnterpriseDTO): Promise<EnterpriseResponseDTO>{
-        const EnterprisExist = await this.getAll();
-        if(EnterprisExist.some(e => e.name === dto.name)) 
-            throw new ConflictException("Usuario ja existe")
+  constructor(public readonly enterpriseRepository: EnterpriseRepository) {}
 
-        const uuid = crypto.randomUUID();
+  async create(dto: EnterpriseDTO): Promise<EnterpriseResponseDTO> {
+    const EnterprisExist = await this.getAll();
+    if (EnterprisExist.some((e) => e.name === dto.name))
+      throw new ConflictException('Usuario ja existe');
 
-        const enterpriseToCreate = {
-            uuid,
-            ...dto
-        }
+    const uuid = crypto.randomUUID();
 
-        const data = await this.EnterpriseRepository.create(enterpriseToCreate)
-        return new EnterpriseResponseDTO(data);
-    }
+    const enterpriseToCreate = {
+      uuid,
+      ...dto,
+    };
 
-    static async getAll() {
-        const data = await this.EnterpriseRepository.getAll();
-        if(!data)
-            throw new NotFoundException("Nenhuma empresa encontrada")
+    const data = await this.enterpriseRepository.create(enterpriseToCreate);
+    return new EnterpriseResponseDTO(data);
+  }
 
-        return data.map(index => {
-            return new EnterpriseResponseDTO(index) 
-        }
-        )
-    }
+  async getAll() {
+    const data = await this.enterpriseRepository.getAll();
+    if (!data) throw new NotFoundException('Nenhuma empresa encontrada');
 
-    static async getById(dto: EnterpriseDTO){
-        const data = await this.EnterpriseRepository.get(EnterpriseDTO);
-        if(!data)
-            throw new NotFoundException("Empresa encontrada")
+    return data.map((index) => {
+      return new EnterpriseResponseDTO(index);
+    });
+  }
 
-        return new EnterpriseResponseDTO(data);
-    }
+  async getById(id: string) {
+    const data = await this.enterpriseRepository.get(id);
+    if (!data) throw new NotFoundException('Empresa encontrada');
 
-    static async update(dto: EnterpriseDTO){
-        const EnterprisExist = this.getAll();
-        if(!EnterprisExist.include(dto.id))
-    }
+    return new EnterpriseResponseDTO(data);
+  }
 
-    static async delete(dto: EnterpriseDTO){
+  async update(id: string, dto: EnterpriseUpdateDTO) {
+    const EnterprisExist = this.getAll();
+    if (!EnterprisExist) throw new NotFoundException('Empresa encontrada');
 
-    }
+    const enterpriseToUpdate = {
+      _id: id,
+      ...dto,
+    };
+    const data = await this.enterpriseRepository.update(enterpriseToUpdate);
+    return new EnterpriseResponseDTO(data);
+  }
+
+  async delete(id: string) {
+    const enterprise = await this.enterpriseRepository.get(id);
+    if (!enterprise) throw new NotFoundException('Empresa encontrada');
+
+    await this.enterpriseRepository.delete(id);
+    return NotContains
+  }
 }
+
+export { EnterpriseService };

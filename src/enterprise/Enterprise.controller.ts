@@ -1,6 +1,7 @@
 import { Body, Delete, Get, HttpCode, Param, Post, Put } from "@nestjs/common";
 import { EnterpriseUpdateDTO } from "./dtos/Enterprise.update.dto";
 import { EnterpriseDTO } from "./dtos/Enterprise.dto";
+import { EnterpriseService } from "./Enterprise.service";
 
 class EnterpriseController {
     
@@ -44,3 +45,5 @@ class EnterpriseController {
   }
 
 }
+
+export { EnterpriseController }

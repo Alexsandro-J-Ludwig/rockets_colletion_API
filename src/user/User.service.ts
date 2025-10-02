@@ -1,12 +1,9 @@
 import { UserDTO } from './dtos/User.dto';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import bcrypt from 'bcrypt';
 import { UserRepository } from './User.repository';
 import { UserUpdateDTO } from './dtos/User.update.dto';
 import { UserResponseDTO } from './dtos/User.response.dto';
-import { UserAlreadyExistsException } from "./exceptions/User-already-exists.exception"
-import { UserNotExistsException } from './exceptions/User-not-exist.exception';
-import { UserPasswordIncorrectException } from './exceptions/User-password-incorrect.exception';
 
 @Injectable()
 class UserService {
@@ -14,7 +11,7 @@ class UserService {
 
   async create(dto: UserDTO): Promise<UserResponseDTO> {
     const user = await this.checkUser(dto.email);
-    if (user) throw new UserAlreadyExistsException();
+    if (user) throw new ConflictException("Usuario com esse email ja existe")
 
     const password = await bcrypt.hash(dto.password, 10);
 
@@ -30,18 +27,18 @@ class UserService {
 
   async login(dto: UserDTO) {
     const data = await this.checkUser(dto.email);
-    if(!data) throw new UserNotExistsException();
+    if(!data) throw new NotFoundException("Usuario nao encontrado")
     
     const checkPassword = await bcrypt.compare(dto.password, data.password);
 
-    if (!checkPassword) throw new UserPasswordIncorrectException();
+    if (!checkPassword) throw new UnauthorizedException("Senha incorreta")
 
     return new UserResponseDTO(data);
   }
 
   async update(id, dto: UserUpdateDTO) {
     const user = await this.checkUser(dto.email);
-    if(!user) throw new UserAlreadyExistsException();
+    if(!user) throw new NotFoundException("Usuario nao encontrado")
 
     const updateToUser = {
       _id: id,
@@ -54,7 +51,7 @@ class UserService {
 
   async delete(id) {
     const user = await this.userRepository.getById(id);
-    if (!user) throw new UserNotExistsException();
+    if (!user) throw new NotFoundException("Usuario nao encontrado")
 
     const data = await this.userRepository.delete(id);
 

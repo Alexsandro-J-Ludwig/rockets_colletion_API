@@ -24,10 +24,6 @@ class EnterpriseDTO {
   @IsNotEmpty()
   @IsString()
   public readonly country: string;
-
-  @IsOptional()
-  @IsString()
-  public readonly uuid_rocket: string[] = [];
 }
 
 export { EnterpriseDTO };
